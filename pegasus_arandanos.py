@@ -13,6 +13,7 @@ Variables descargadas:
   - Presion Atmosferica (hPa)
 """
 
+import os
 import requests
 from bs4 import BeautifulSoup
 import sqlite3
@@ -21,6 +22,14 @@ import sys
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+
+# Cargar .env si existe (credenciales locales, no van a GitHub)
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        if _line.strip() and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,8 +48,8 @@ log = logging.getLogger(__name__)
 
 # ── Configuracion ────────────────────────────────────────────────────────────
 BASE_URL    = "http://recursoshidricos.hopto.org:1002"
-USERNAME    = "jpdrea"
-PASSWORD    = "Arandanos"
+USERNAME    = os.environ.get("PEGASUS_USER", "jpdrea")
+PASSWORD    = os.environ.get("PEGASUS_PASS", "Arandanos")
 DB_PATH     = Path(__file__).parent / "pegasus_arandanos.db"
 EQUIPO_ID   = "15"
 STATION     = "Finca Leon Rouges"
