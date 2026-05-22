@@ -1,0 +1,46 @@
+{
+  "_comentario": "Actualizar mensualmente con los datos de la tabla de fenologia del informe de produccion.",
+  "_escala": "V1-V4 = etapas vegetativas (yema dormante a hoja abierta). R0 = yema floral dormante. R1 = yema hinchada. R2 = boton visible. R3 = flores abiertas. R4 = cuaje. R5 = fruto.",
+  "_fuente": "04 Inf. de produccion - Abril / Hoja TDB-ABR / Medicion 19/05/2026",
+  "_actualizado": "2026-05-21",
+
+  "etapa_predominante": "inicio_dormancia",
+  "fecha_medicion": "2026-05-19",
+
+  "descripcion": "La mayoria de los lotes presenta R0 como etapa dominante (yemas florales dormantes), con algunos lotes todavia completando la defoliacion (solo etapas V). Snowchaser y Kestrel muestran avance hacia R1-R3 en algunos lotes.",
+
+  "grupos": {
+    "R0_dominante": {
+      "etapa": "Inicio de dormancia — R0 dominante (yema floral cerrada)",
+      "variedades": ["Snowchaser", "Springhigh", "Ventura", "Rocio", "Kestrel"],
+      "lotes": ["A4", "C1", "C2", "1", "7", "12", "22"],
+      "detalle": "R0 representa el 58-77% de las yemas contadas. Comienza la acumulacion efectiva de horas de frio."
+    },
+    "pre_dormancia": {
+      "etapa": "Pre-dormancia — aun en etapas vegetativas (V), sin R0",
+      "variedades": ["Eureka", "Meadowlark", "Farthing"],
+      "lotes": ["C6", "20", "25"],
+      "detalle": "Solo etapas V (V2-V4). Plantas en proceso de defoliacion, no ingresaron a dormancia floral aun."
+    },
+    "avanzado": {
+      "etapa": "R1-R3 detectados — movimiento prematuro en algunos lotes",
+      "variedades": ["Snowchaser", "Kestrel"],
+      "lotes": ["A4", "C1", "12"],
+      "detalle": "Snowchaser A4: R3=21 yemas. Kestrel 12: R1=19, R2=14. Monitorear: podria indicar brotacion anticipada por falta de frio o temperatura irregular."
+    }
+  },
+
+  "alerta_activa": true,
+  "texto_alerta": "Kestrel lote 12 y Snowchaser A4/C1 muestran R1-R3 en mayo. En dormancia esperada, esta actividad puede indicar entrada irregular a dormancia o rebrote post-cosecha. Controlar en la proxima medicion.",
+
+  "requerimiento_horas_frio": {
+    "Snowchaser": 300,
+    "Springhigh": 350,
+    "Ventura": 400,
+    "Rocio": 400,
+    "Kestrel": 500,
+    "Eureka": 350,
+    "Meadowlark": 450,
+    "Farthing": 300
+  }
+}

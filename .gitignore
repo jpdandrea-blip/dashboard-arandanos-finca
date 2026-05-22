@@ -1,0 +1,29 @@
+# Informes HTML generados automaticamente
+informe_*.html
+
+# Archivos de entorno
+.env
+*.env
+
+# Datos de descarga local (no necesarios para el dashboard en la nube)
+# La DB SI se sube para que Streamlit Cloud la lea
+# informe_semanal.py  <-- subido sin credenciales (ver abajo)
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Windows
+Thumbs.db
+Desktop.ini
