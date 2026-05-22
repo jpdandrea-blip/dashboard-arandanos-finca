@@ -6,6 +6,7 @@ Uso manual:  python informe_semanal.py
 Automatico:  llamado por el Programador de Tareas cada lunes.
 """
 
+import os
 import sqlite3
 import smtplib
 import sys
@@ -17,6 +18,14 @@ from pathlib import Path
 
 import json
 import pandas as pd
+
+# Cargar .env si existe (credenciales locales, no van a GitHub)
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        if _line.strip() and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Importar descarga de datos ────────────────────────────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
@@ -32,7 +41,7 @@ log = logging.getLogger(__name__)
 # ── Configuracion email ───────────────────────────────────────────────────────
 EMAIL_ORIGEN  = "juanpidan99@gmail.com"
 EMAIL_DESTINO = "jpdandrea@tierradearandanos.com.ar"
-APP_PASSWORD  = "zzlatqgbfyjlsvij"   # sin espacios
+APP_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")   # leer de .env local
 SMTP_HOST     = "smtp.gmail.com"
 SMTP_PORT     = 587
 
