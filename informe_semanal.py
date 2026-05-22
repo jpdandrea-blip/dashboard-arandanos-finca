@@ -921,6 +921,41 @@ def construir_html(daily: pd.DataFrame, df_raw: pd.DataFrame, insights: list[dic
     return html
 
 
+# ── Sync a GitHub (para Streamlit Cloud) ─────────────────────────────────────
+import subprocess
+
+def sync_db_a_github(fecha: datetime) -> None:
+    """
+    Commitea la DB actualizada y la pushea a GitHub.
+    Streamlit Community Cloud detecta el push y redespliega el dashboard.
+    Requiere que el repo tenga un remote 'origin' configurado.
+    """
+    repo = Path(__file__).parent
+    try:
+        # Verificar que hay un remote configurado
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo, capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            log.warning("Git remote 'origin' no configurado. Omitiendo sync a GitHub.")
+            return
+
+        fecha_str = fecha.strftime("%Y-%m-%d")
+        subprocess.run(["git", "add", "pegasus_arandanos.db", "fenologia_config.json"],
+                       cwd=repo, check=True)
+        subprocess.run(["git", "commit", "-m",
+                        f"data: actualizar DB y fenologia {fecha_str} [auto]"],
+                       cwd=repo, capture_output=True)  # puede no haber cambios
+        subprocess.run(["git", "push", "origin", "master"],
+                       cwd=repo, check=True, capture_output=True)
+        log.info("DB pusheada a GitHub. Streamlit Cloud redespliegara automaticamente.")
+    except subprocess.CalledProcessError as e:
+        log.warning(f"No se pudo pushear a GitHub: {e}")
+    except Exception as e:
+        log.warning(f"Error en sync_db_a_github: {e}")
+
+
 # ── Envio de email ────────────────────────────────────────────────────────────
 def enviar_email(html: str, fecha_hasta: datetime) -> None:
     semana_str = fecha_hasta.strftime("%d/%m/%Y")
@@ -992,6 +1027,9 @@ def main():
 
     # 7. Enviar email
     enviar_email(html, fecha_hasta)
+
+    # 8. Pushear DB actualizada a GitHub (para Streamlit Community Cloud)
+    sync_db_a_github(ahora)
 
 
 if __name__ == "__main__":
