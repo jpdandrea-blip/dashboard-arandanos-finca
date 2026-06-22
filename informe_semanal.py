@@ -39,8 +39,12 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ── Configuracion email ───────────────────────────────────────────────────────
-EMAIL_ORIGEN  = "juanpidan99@gmail.com"
-EMAIL_DESTINO = "jpdandrea@tierradearandanos.com.ar"
+EMAIL_ORIGEN   = "juanpidan99@gmail.com"
+EMAIL_DESTINOS = [
+    "jpdandrea@tierradearandanos.com.ar",
+    "santiagofriasalurralde@tierradearandanos.com.ar",
+    "dsalinas@tierradearandanos.com.ar",
+]
 APP_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")   # leer de .env local
 SMTP_HOST     = "smtp.gmail.com"
 SMTP_PORT     = 587
@@ -956,6 +960,10 @@ def sync_db_a_github(fecha: datetime) -> None:
         subprocess.run(["git", "commit", "-m",
                         f"data: actualizar DB y fenologia {fecha_str} [auto]"],
                        cwd=repo, capture_output=True)  # puede no haber cambios
+
+        # Sincronizar con remote antes de pushear (evita rejected si hay commits remotos)
+        subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "master"],
+                       cwd=repo, check=True, capture_output=True)
         subprocess.run(["git", "push", "origin", "master"],
                        cwd=repo, check=True, capture_output=True)
         log.info("DB pusheada a GitHub. Streamlit Cloud redespliegara automaticamente.")
@@ -973,18 +981,18 @@ def enviar_email(html: str, fecha_hasta: datetime) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = asunto
     msg["From"]    = f"Estacion Meteorologica <{EMAIL_ORIGEN}>"
-    msg["To"]      = EMAIL_DESTINO
+    msg["To"]      = ", ".join(EMAIL_DESTINOS)
 
     msg.attach(MIMEText(html, "html", "utf-8"))
 
-    log.info(f"Enviando email a {EMAIL_DESTINO}...")
+    log.info(f"Enviando email a {', '.join(EMAIL_DESTINOS)}...")
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.ehlo()
         server.starttls()
         server.login(EMAIL_ORIGEN, APP_PASSWORD)
-        server.sendmail(EMAIL_ORIGEN, EMAIL_DESTINO, msg.as_string())
+        server.sendmail(EMAIL_ORIGEN, EMAIL_DESTINOS, msg.as_string())
 
-    log.info("Email enviado correctamente.")
+    log.info(f"Email enviado a {len(EMAIL_DESTINOS)} destinatarios.")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
