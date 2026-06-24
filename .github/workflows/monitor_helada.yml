@@ -1,0 +1,50 @@
+name: Monitor Helada - Finca Leon Rouges
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # cada 15 minutos, 24/7
+  workflow_dispatch:           # permite correrlo manualmente desde GitHub
+
+concurrency:
+  group: monitor-helada
+  cancel-in-progress: false   # si ya hay uno corriendo, el nuevo espera
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Correr monitor de temperatura
+        env:
+          PEGASUS_USER:          ${{ secrets.PEGASUS_USER }}
+          PEGASUS_PASS:          ${{ secrets.PEGASUS_PASS }}
+          CALLMEBOT_RECIPIENTS:  ${{ secrets.CALLMEBOT_RECIPIENTS }}
+        run: python monitor_helada_cloud.py
+
+      - name: Guardar estado si cambio
+        run: |
+          git config user.name  "Monitor Helada Bot"
+          git config user.email "monitor@finca-leonrouges"
+          git add monitor_state.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios de estado — no se commitea."
+          else
+            git pull --rebase --autostash origin master
+            git commit -m "monitor: actualizar estado helada [auto]"
+            git push origin master
+          fi
