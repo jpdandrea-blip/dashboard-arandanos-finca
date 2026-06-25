@@ -25,14 +25,23 @@ jobs:
 
           git clone "https://$HF_USER:$HF_TOKEN@huggingface.co/spaces/$HF_USER/$HF_SPACE" hf_repo
 
+          echo "=== Archivos en el Space ==="
+          ls -la hf_repo/
+
           cp dashboard_arandanos.py hf_repo/streamlit_app.py
           cp requirements.txt       hf_repo/requirements.txt
 
+          # Toca el Dockerfile con timestamp para forzar rebuild en HF
+          if [ -f hf_repo/Dockerfile ]; then
+            sed -i "s/^# BUILD:.*//" hf_repo/Dockerfile
+            echo "# BUILD: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> hf_repo/Dockerfile
+          fi
+
           cd hf_repo
-          git add streamlit_app.py requirements.txt
+          git add -A
           if git diff --staged --quiet; then
-            echo "Sin cambios en el dashboard."
+            echo "Sin cambios."
           else
-            git commit -m "chore: sync dashboard desde GitHub"
+            git commit -m "chore: sync dashboard desde GitHub $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
