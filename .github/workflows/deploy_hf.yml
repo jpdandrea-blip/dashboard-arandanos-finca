@@ -25,11 +25,11 @@ jobs:
 
           git clone "https://$HF_USER:$HF_TOKEN@huggingface.co/spaces/$HF_USER/$HF_SPACE" hf_repo
 
-          cp dashboard_arandanos.py hf_repo/app.py
+          cp dashboard_arandanos.py hf_repo/streamlit_app.py
           cp requirements.txt       hf_repo/requirements.txt
 
           cd hf_repo
-          git add app.py requirements.txt
+          git add streamlit_app.py requirements.txt
           if git diff --staged --quiet; then
             echo "Sin cambios en el dashboard."
           else
