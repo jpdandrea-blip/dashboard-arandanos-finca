@@ -28,21 +28,27 @@ jobs:
           cp dashboard_arandanos.py hf_repo/streamlit_app.py
           cp requirements.txt       hf_repo/requirements.txt
 
-          echo "FROM python:3.11"                                                                          > hf_repo/Dockerfile
-          echo "WORKDIR /code"                                                                            >> hf_repo/Dockerfile
-          echo "COPY requirements.txt ."                                                                  >> hf_repo/Dockerfile
-          echo "RUN pip install --no-cache-dir -r requirements.txt"                                      >> hf_repo/Dockerfile
-          echo "COPY . ."                                                                                 >> hf_repo/Dockerfile
-          echo "EXPOSE 7860"                                                                              >> hf_repo/Dockerfile
-          echo "ENV PORT=7860"                                                                            >> hf_repo/Dockerfile
-          echo "# BUILD: $(date -u +%Y-%m-%dT%H:%M:%SZ)"                                                >> hf_repo/Dockerfile
-          echo "CMD streamlit run streamlit_app.py --server.port=7860 --server.address=0.0.0.0"         >> hf_repo/Dockerfile
+          # README con sdk: streamlit (sin Docker)
+          printf '%s\n' \
+            '---' \
+            'title: Dashboard Arandanos Finca Leon Rouges' \
+            'emoji: 🫐' \
+            'colorFrom: green' \
+            'colorTo: blue' \
+            'sdk: streamlit' \
+            'sdk_version: 1.45.1' \
+            'app_file: streamlit_app.py' \
+            'pinned: false' \
+            '---' > hf_repo/README.md
+
+          # Eliminar Dockerfile si existe (usamos SDK nativo, no Docker)
+          rm -f hf_repo/Dockerfile
 
           cd hf_repo
           git add -A
           if git diff --staged --quiet; then
             echo "Sin cambios."
           else
-            git commit -m "chore: sync dashboard desde GitHub $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "chore: migrar a Streamlit SDK nativo $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
