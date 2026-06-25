@@ -2,16 +2,15 @@
 monitor_helada_cloud.py
 Corre en GitHub Actions cada 15 minutos — independiente de la PC.
 - Descarga datos de Pegasus y los guarda en Supabase
-- Envia alertas WhatsApp via UltraMsg si T <= 2 C
+- Envia alertas Telegram si T <= 2 C
 
 Secrets en GitHub (Settings > Secrets > Actions):
-  PEGASUS_USER       — usuario Pegasus
-  PEGASUS_PASS       — password Pegasus
-  SUPABASE_URL       — URL del proyecto Supabase
-  SUPABASE_KEY       — service_role key de Supabase
-  ULTRAMSG_INSTANCE  — ID de instancia UltraMsg (ej: "instance12345")
-  ULTRAMSG_TOKEN     — token de UltraMsg
-  ULTRAMSG_PHONES    — numeros separados por coma: "5491150000000,5491160000000"
+  PEGASUS_USER        — usuario Pegasus
+  PEGASUS_PASS        — password Pegasus
+  SUPABASE_URL        — URL del proyecto Supabase
+  SUPABASE_KEY        — service_role key de Supabase
+  TELEGRAM_BOT_TOKEN  — token del bot (obtenido via @BotFather)
+  TELEGRAM_CHAT_IDS   — chat IDs separados por coma: "123456789,987654321"
 """
 import os
 import json
@@ -41,11 +40,10 @@ UMBRAL_ALERTA     = 2.0   # C — alerta cuando T <= este valor
 UMBRAL_FIN        = 4.0   # C — desactivar alerta cuando T > este valor
 HORAS_SILENCIO    = 4     # h — esperar antes de re-alertar
 
-SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY      = os.environ.get("SUPABASE_KEY", "")  # service_role
-ULTRAMSG_INSTANCE = os.environ.get("ULTRAMSG_INSTANCE", "")
-ULTRAMSG_TOKEN    = os.environ.get("ULTRAMSG_TOKEN", "")
-ULTRAMSG_PHONES   = os.environ.get("ULTRAMSG_PHONES", "")  # "549XXXXXXXXXX,549XXXXXXXXXX"
+SUPABASE_URL        = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY        = os.environ.get("SUPABASE_KEY", "")  # service_role
+TELEGRAM_BOT_TOKEN  = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_IDS   = os.environ.get("TELEGRAM_CHAT_IDS", "")  # "123456789,987654321"
 
 STATE_FILE = Path(__file__).parent / "monitor_state.json"
 
@@ -164,32 +162,27 @@ def guardar_en_supabase(records: list) -> int:
         return 0
 
 
-# ── WhatsApp UltraMsg ─────────────────────────────────────────────────────────
-def send_whatsapp(mensaje: str) -> int:
-    if not ULTRAMSG_INSTANCE or not ULTRAMSG_TOKEN or not ULTRAMSG_PHONES:
-        log.warning("UltraMsg no configurado (ULTRAMSG_INSTANCE / TOKEN / PHONES).")
+# ── Telegram ──────────────────────────────────────────────────────────────────
+def send_telegram(mensaje: str) -> int:
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_IDS:
+        log.warning("Telegram no configurado (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_IDS).")
         return 0
-    phones = [p.strip() for p in ULTRAMSG_PHONES.split(",") if p.strip()]
+    chat_ids = [c.strip() for c in TELEGRAM_CHAT_IDS.split(",") if c.strip()]
     sent = 0
-    for phone in phones:
+    for chat_id in chat_ids:
         try:
             resp = requests.post(
-                f"https://api.ultramsg.com/{ULTRAMSG_INSTANCE}/messages/chat",
-                data={
-                    "token": ULTRAMSG_TOKEN,
-                    "to":    f"{phone}@c.us",
-                    "body":  mensaje,
-                },
-                headers={"content-type": "application/x-www-form-urlencoded"},
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                json={"chat_id": chat_id, "text": mensaje, "parse_mode": "Markdown"},
                 timeout=20,
             )
-            if resp.status_code == 200 and resp.json().get("sent") == "true":
-                log.info(f"WhatsApp enviado a {phone}")
+            if resp.status_code == 200 and resp.json().get("ok"):
+                log.info(f"Telegram enviado a {chat_id}")
                 sent += 1
             else:
-                log.warning(f"WhatsApp error para {phone}: {resp.text[:120]}")
+                log.warning(f"Telegram error para {chat_id}: {resp.text[:120]}")
         except Exception as e:
-            log.warning(f"WhatsApp exception para {phone}: {e}")
+            log.warning(f"Telegram exception para {chat_id}: {e}")
     return sent
 
 
@@ -281,7 +274,7 @@ def main():
                 f"Umbral de alerta: {UMBRAL_ALERTA} °C\n"
                 f"⚠️ Verificar sistema antihelada."
             )
-            enviados = send_whatsapp(msg)
+            enviados = send_telegram(msg)
             log.info(f"Alerta enviada a {enviados} destinatarios.")
             estado["en_alerta"] = True
             estado["ultima_alerta"] = ahora.isoformat()
@@ -297,7 +290,7 @@ def main():
             f"📉 Mínima del evento: *{t_min_ev:.1f} °C*\n\n"
             f"Temperatura superó {UMBRAL_FIN} °C. Alerta desactivada."
         )
-        enviados = send_whatsapp(msg)
+        enviados = send_telegram(msg)
         log.info(f"Recuperacion notificada a {enviados} destinatarios.")
         estado["en_alerta"] = False
         estado["temp_min_evento"] = None

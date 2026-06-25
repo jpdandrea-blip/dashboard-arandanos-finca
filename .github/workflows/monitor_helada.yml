@@ -31,13 +31,12 @@ jobs:
 
       - name: Correr monitor de temperatura
         env:
-          PEGASUS_USER:       ${{ secrets.PEGASUS_USER }}
-          PEGASUS_PASS:       ${{ secrets.PEGASUS_PASS }}
-          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY:       ${{ secrets.SUPABASE_KEY }}
-          ULTRAMSG_INSTANCE:  ${{ secrets.ULTRAMSG_INSTANCE }}
-          ULTRAMSG_TOKEN:     ${{ secrets.ULTRAMSG_TOKEN }}
-          ULTRAMSG_PHONES:    ${{ secrets.ULTRAMSG_PHONES }}
+          PEGASUS_USER:        ${{ secrets.PEGASUS_USER }}
+          PEGASUS_PASS:        ${{ secrets.PEGASUS_PASS }}
+          SUPABASE_URL:        ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:        ${{ secrets.SUPABASE_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_IDS:   ${{ secrets.TELEGRAM_CHAT_IDS }}
         run: python monitor_helada_cloud.py
 
       - name: Guardar estado si cambio
