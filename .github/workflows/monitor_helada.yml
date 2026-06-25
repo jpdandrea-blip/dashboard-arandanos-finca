@@ -27,13 +27,17 @@ jobs:
           python-version: '3.12'
 
       - name: Instalar dependencias
-        run: pip install requests beautifulsoup4 lxml
+        run: pip install requests beautifulsoup4 lxml supabase
 
       - name: Correr monitor de temperatura
         env:
-          PEGASUS_USER:          ${{ secrets.PEGASUS_USER }}
-          PEGASUS_PASS:          ${{ secrets.PEGASUS_PASS }}
-          CALLMEBOT_RECIPIENTS:  ${{ secrets.CALLMEBOT_RECIPIENTS }}
+          PEGASUS_USER:       ${{ secrets.PEGASUS_USER }}
+          PEGASUS_PASS:       ${{ secrets.PEGASUS_PASS }}
+          SUPABASE_URL:       ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY:       ${{ secrets.SUPABASE_KEY }}
+          ULTRAMSG_INSTANCE:  ${{ secrets.ULTRAMSG_INSTANCE }}
+          ULTRAMSG_TOKEN:     ${{ secrets.ULTRAMSG_TOKEN }}
+          ULTRAMSG_PHONES:    ${{ secrets.ULTRAMSG_PHONES }}
         run: python monitor_helada_cloud.py
 
       - name: Guardar estado si cambio

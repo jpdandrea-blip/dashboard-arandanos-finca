@@ -1,0 +1,37 @@
+name: Deploy Dashboard a Hugging Face Spaces
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'dashboard_arandanos.py'
+      - 'requirements.txt'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push a Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USER:  ${{ secrets.HF_USER }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          git config --global user.email "noreply@huggingface.co"
+          git config --global user.name  "GitHub Actions"
+
+          git clone "https://$HF_USER:$HF_TOKEN@huggingface.co/spaces/$HF_USER/$HF_SPACE" hf_repo
+
+          cp dashboard_arandanos.py hf_repo/app.py
+          cp requirements.txt       hf_repo/requirements.txt
+
+          cd hf_repo
+          git add app.py requirements.txt
+          if git diff --staged --quiet; then
+            echo "Sin cambios en el dashboard."
+          else
+            git commit -m "chore: sync dashboard desde GitHub"
+            git push
+          fi
