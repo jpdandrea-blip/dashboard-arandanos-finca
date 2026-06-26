@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 from supabase import create_client
 
 # ── Supabase ──────────────────────────────────────────────────────────────────
@@ -25,6 +26,9 @@ def get_supabase():
         st.stop()
     return create_client(SUPABASE_URL, SUPABASE_ANON)
 
+
+# Auto-refresh cada 15 minutos (coincide con el monitor de GitHub Actions)
+st_autorefresh(interval=15 * 60 * 1000, key="autorefresh")
 
 # ── Config pagina ─────────────────────────────────────────────────────────────
 st.set_page_config(
