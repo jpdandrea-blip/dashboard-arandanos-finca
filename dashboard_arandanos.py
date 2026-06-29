@@ -27,9 +27,6 @@ def get_supabase():
     return create_client(SUPABASE_URL, SUPABASE_ANON)
 
 
-# Auto-refresh cada 15 minutos (coincide con el monitor de GitHub Actions)
-st_autorefresh(interval=15 * 60 * 1000, key="autorefresh")
-
 # ── Config pagina ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Estacion Finca Leon Rouges",
@@ -37,6 +34,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Auto-refresh cada 15 minutos (coincide con el monitor de GitHub Actions)
+st_autorefresh(interval=15 * 60 * 1000, key="autorefresh")
 
 st.markdown("""
 <style>
