@@ -1,46 +1,96 @@
 {
-  "_comentario": "Actualizar mensualmente con los datos de la tabla de fenologia del informe de produccion.",
-  "_escala": "V1-V4 = etapas vegetativas (yema dormante a hoja abierta). R0 = yema floral dormante. R1 = yema hinchada. R2 = boton visible. R3 = flores abiertas. R4 = cuaje. R5 = fruto.",
-  "_fuente": "04 Inf. de produccion - Abril / Hoja TDB-ABR / Medicion 19/05/2026",
-  "_actualizado": "2026-05-21",
+  "_comentario": "Actualizar con cada medicion semanal de fenologia de la finca.",
+  "_escala": "V1-V4 = etapas vegetativas. R0 = yema floral dormante. R1 = yema hinchada. R2 = boton visible. R3 = flores abiertas / cuaje. R4 = fruto pinto. R5 = maduro.",
+  "_fuente": "fenologia.xlsx / Hoja Fenologia 2 / Medicion 12/05/2026",
+  "_actualizado": "2026-05-22",
 
   "etapa_predominante": "inicio_dormancia",
-  "fecha_medicion": "2026-05-19",
+  "fecha_medicion": "2026-05-12",
 
-  "descripcion": "La mayoria de los lotes presenta R0 como etapa dominante (yemas florales dormantes), con algunos lotes todavia completando la defoliacion (solo etapas V). Snowchaser y Kestrel muestran avance hacia R1-R3 en algunos lotes.",
+  "descripcion": "Finca mixta: 4 lotes aun en etapa vegetativa (defoliacion en curso), 4 lotes con R0 dominante (inicio dormancia floral), 1 lote con R0+R1 activos (Lote 12 Rocio) y 1 lote critico con R3 confirmado y frutos (TDI4 Snowchaser). Alerta fitosanitaria severa en Lote 8.",
 
   "grupos": {
-    "R0_dominante": {
-      "etapa": "Inicio de dormancia — R0 dominante (yema floral cerrada)",
-      "variedades": ["Snowchaser", "Springhigh", "Ventura", "Rocio", "Kestrel"],
-      "lotes": ["A4", "C1", "C2", "1", "7", "12", "22"],
-      "detalle": "R0 representa el 58-77% de las yemas contadas. Comienza la acumulacion efectiva de horas de frio."
-    },
     "pre_dormancia": {
-      "etapa": "Pre-dormancia — aun en etapas vegetativas (V), sin R0",
-      "variedades": ["Eureka", "Meadowlark", "Farthing"],
-      "lotes": ["C6", "20", "25"],
-      "detalle": "Solo etapas V (V2-V4). Plantas en proceso de defoliacion, no ingresaron a dormancia floral aun."
+      "etapa": "Pre-dormancia — etapas vegetativas, sin R0",
+      "variedades": ["Rocio", "San Joaquin", "Farthing"],
+      "lotes": ["19", "25", "24", "TDI21"],
+      "detalle": "Solo V3+V4. Plantas en defoliacion otoñal. Lote 25 (SJ) con textura foliar irregular a revisar con lupa. Lote 24 (Farthing) con deposito blanquecino — posible oidio."
     },
-    "avanzado": {
-      "etapa": "R1-R3 detectados — movimiento prematuro en algunos lotes",
-      "variedades": ["Snowchaser", "Kestrel"],
-      "lotes": ["A4", "C1", "12"],
-      "detalle": "Snowchaser A4: R3=21 yemas. Kestrel 12: R1=19, R2=14. Monitorear: podria indicar brotacion anticipada por falta de frio o temperatura irregular."
+    "R0_dominante": {
+      "etapa": "Inicio de dormancia floral — R0 dominante",
+      "variedades": ["Snowchaser", "Rocio", "Primadonna", "Farthing"],
+      "lotes": ["22", "52", "TDI10", "19 TDI"],
+      "detalle": "R0 presente como yema floral dominante. TDI19 (Farthing) con el mayor conteo de R0=17. TDI10 (Primadonna) con clorosis internerval confirmada — medir pH suelo urgente."
+    },
+    "R1_activo": {
+      "etapa": "R0+R1 activos — botones florales visibles",
+      "variedades": ["Rocio"],
+      "lotes": ["12"],
+      "detalle": "Lote 12 (Rocio): R0=7, R1=7. Botones florales rosados visibles. Manchas foliares persistentes. Monitoreo semanal prioritario."
+    },
+    "avanzado_r3": {
+      "etapa": "R3 CONFIRMADO — frutos en formacion (critico)",
+      "variedades": ["Snowchaser"],
+      "lotes": ["TDI4"],
+      "detalle": "TDI4 (Snowchaser): R0=4, R1=5, R2=5, R3=7. Frutos tamano arveja confirmados. Tela de arana = acaro Tetranychus probable. ACARICIDA URGENTE. Monitoreo 2x por semana."
+    },
+    "alerta_fitosanitaria": {
+      "etapa": "Alerta sanitaria — enrollamiento foliar severo",
+      "variedades": ["Snowchaser"],
+      "lotes": ["8"],
+      "detalle": "Lote 8 (Snowchaser): enrollamiento foliar severo en ~95% de hojas. Agravado desde abril. Diagnostico de laboratorio URGENTE (acaro / virus / trips). No usar datos fenologicos de este lote hasta resolver."
     }
   },
 
+  "alertas": [
+    {
+      "nivel": "CRITICO",
+      "lote": "TDI4",
+      "variedad": "Snowchaser",
+      "descripcion": "R3 confirmado con frutos. Tela de arana = Tetranychus probable. Aplicar acaricida URGENTE. Monitoreo 2x semana."
+    },
+    {
+      "nivel": "URGENTE",
+      "lote": "8",
+      "variedad": "Snowchaser",
+      "descripcion": "Enrollamiento foliar severo 95% hojas. Enviar muestra a laboratorio (acaro / virus / trips)."
+    },
+    {
+      "nivel": "ATENCION",
+      "lote": "12",
+      "variedad": "Rocio",
+      "descripcion": "R0=R1=7. Botones florales rosados visibles en mayo — movimiento floral prematuro. Monitoreo semanal."
+    },
+    {
+      "nivel": "ATENCION",
+      "lote": "TDI10",
+      "variedad": "Primadonna",
+      "descripcion": "Clorosis internerval confirmada (probable def. Fe). Medir pH de suelo con urgencia."
+    }
+  ],
+
   "alerta_activa": true,
-  "texto_alerta": "Kestrel lote 12 y Snowchaser A4/C1 muestran R1-R3 en mayo. En dormancia esperada, esta actividad puede indicar entrada irregular a dormancia o rebrote post-cosecha. Controlar en la proxima medicion.",
+  "texto_alerta": "TDI4 (Snowchaser): R3 con frutos en mayo y acaro activo — acaricida urgente. Lote 8 (Snowchaser): enrollamiento foliar severo al 95%, diagnostico laboratorio. Lote 12 (Rocio): botones florales visibles, movimiento floral prematuro.",
 
   "requerimiento_horas_frio": {
-    "Snowchaser": 300,
-    "Springhigh": 350,
-    "Ventura": 400,
-    "Rocio": 400,
-    "Kestrel": 500,
-    "Eureka": 350,
-    "Meadowlark": 450,
-    "Farthing": 300
-  }
+    "Snowchaser": 200,
+    "Rocio": 350,
+    "Farthing": 300,
+    "San Joaquin": 450,
+    "Primadonna": 250
+  },
+
+  "mediciones_detalle": [
+    {"fecha": "2026-05-12", "lote": "19",    "variedad": "Rocio",       "estado": "Vegetativo",   "V4": 36, "R0": 0,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "25",    "variedad": "San Joaquin", "estado": "Vegetativo",   "V3": 9,  "V4": 40, "R0": 0,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "24",    "variedad": "Farthing",    "estado": "Vegetativo",   "V3": 10, "V4": 45, "R0": 0,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "22",    "variedad": "Snowchaser",  "estado": "Reproductivo", "V4": 40, "R0": 9,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "12",    "variedad": "Rocio",       "estado": "Reproductivo", "V4": 37, "R0": 7,  "R1": 7, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "8",     "variedad": "Snowchaser",  "estado": "Alerta",       "V3": 5,  "V4": 58, "R0": 0,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "52",    "variedad": "Rocio",       "estado": "Reproductivo", "V3": 8,  "V4": 55, "R0": 9,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "TDI21", "variedad": "San Joaquin", "estado": "Vegetativo",   "V4": 52, "R0": 0,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "19 TDI","variedad": "Farthing",    "estado": "Reproductivo", "V3": 2,  "V4": 39, "R0": 17, "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "TDI10", "variedad": "Primadonna",  "estado": "Reproductivo", "V3": 9,  "V4": 42, "R0": 5,  "R1": 0, "R2": 0, "R3": 0},
+    {"fecha": "2026-05-12", "lote": "TDI4",  "variedad": "Snowchaser",  "estado": "Critico",      "V3": 5,  "V4": 31, "R0": 4,  "R1": 5, "R2": 5, "R3": 7}
+  ]
 }
