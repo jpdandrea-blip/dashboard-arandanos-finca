@@ -93,37 +93,38 @@ def parse_float(s):
         return None
 
 
-def descargar_ultima_hora(session):
-    """Descarga la ultima hora de Pegasus. Devuelve lista de dicts."""
-    ahora     = datetime.now()
-    date_from = (ahora - timedelta(hours=1)).strftime("%d/%m/%Y")
-    date_to   = ahora.strftime("%d/%m/%Y")
-
-    r = session.get(f"{BASE_URL}/Historico.aspx", timeout=30)
-    r.raise_for_status()
-    soup = BeautifulSoup(r.text, "lxml")
+def _post_historico(session, date_from, date_to, soup, eventtarget="", eventargument="", click_ver=False):
     hidden = get_hidden_fields(soup)
     data = {
         **hidden,
-        "__EVENTTARGET": "", "__EVENTARGUMENT": "",
+        "__EVENTTARGET": eventtarget, "__EVENTARGUMENT": eventargument,
         "DropDownList1": EQUIPO_ID, "DropDownList3": EQUIPO_ID,
         "DropDownList2": "0",
         "TextBox1": date_from, "TextBox2": date_to,
-        "ImageButton1.x": "10", "ImageButton1.y": "10",
     }
+    if click_ver:
+        data["ImageButton1.x"] = "10"
+        data["ImageButton1.y"] = "10"
     r = session.post(f"{BASE_URL}/Historico.aspx", data=data, timeout=60)
     r.raise_for_status()
-    soup = BeautifulSoup(r.text, "lxml")
+    return BeautifulSoup(r.text, "lxml")
 
+
+def _parse_rows(soup):
     table = soup.find("table", id="GridView1")
     if not table:
         return []
-
-    records = []
+    rows = []
     for tr in table.find_all("tr")[1:]:
         cells = [td.get_text(strip=True) for td in tr.find_all("td")]
-        if len(cells) < 11:
-            continue
+        if len(cells) >= 11:
+            rows.append(cells)
+    return rows
+
+
+def _rows_to_records(rows):
+    records = []
+    for cells in rows:
         try:
             ts = datetime.strptime(cells[0], "%d/%m/%Y %H:%M:%S").isoformat()
             records.append({
@@ -143,6 +144,35 @@ def descargar_ultima_hora(session):
         except Exception:
             continue
     return records
+
+
+def descargar_datos_hoy(session):
+    """Descarga todos los datos de hoy y ayer con paginacion completa."""
+    ahora     = datetime.now()
+    date_from = (ahora - timedelta(days=1)).strftime("%d/%m/%Y")
+    date_to   = ahora.strftime("%d/%m/%Y")
+
+    r = session.get(f"{BASE_URL}/Historico.aspx", timeout=30)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "lxml")
+    soup = _post_historico(session, date_from, date_to, soup, click_ver=True)
+
+    all_rows = []
+    page = 1
+    while True:
+        rows = _parse_rows(soup)
+        if not rows:
+            break
+        all_rows.extend(rows)
+        log.info(f"Pagina {page}: {len(rows)} registros (acum: {len(all_rows)})")
+        next_link = soup.find("a", string="Siguiente")
+        if not next_link:
+            break
+        page += 1
+        soup = _post_historico(session, date_from, date_to, soup,
+                               eventtarget="GridView1", eventargument="Page$Next")
+
+    return _rows_to_records(all_rows)
 
 
 # ── Supabase ──────────────────────────────────────────────────────────────────
@@ -217,7 +247,7 @@ def main():
         session = requests.Session()
         session.headers.update({"User-Agent": "Mozilla/5.0 (compatible; MonitorBot/1.0)"})
         login(session)
-        records = descargar_ultima_hora(session)
+        records = descargar_datos_hoy(session)
     except Exception as e:
         log.error(f"Error al consultar Pegasus: {e}")
         sys.exit(0)  # exit 0 para que GitHub Actions no lo marque como fallo
