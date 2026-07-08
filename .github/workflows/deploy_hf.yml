@@ -1,0 +1,54 @@
+name: Deploy Dashboard a Hugging Face Spaces
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'dashboard_arandanos.py'
+      - 'requirements.txt'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push a Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_USER:  ${{ secrets.HF_USER }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          git config --global user.email "noreply@huggingface.co"
+          git config --global user.name  "GitHub Actions"
+
+          git clone "https://$HF_USER:$HF_TOKEN@huggingface.co/spaces/$HF_USER/$HF_SPACE" hf_repo
+
+          cp dashboard_arandanos.py hf_repo/streamlit_app.py
+          cp requirements.txt       hf_repo/requirements.txt
+
+          # README con sdk: streamlit (sin Docker)
+          printf '%s\n' \
+            '---' \
+            'title: Dashboard Arandanos Finca Leon Rouges' \
+            'emoji: 🫐' \
+            'colorFrom: green' \
+            'colorTo: blue' \
+            'sdk: streamlit' \
+            'sdk_version: 1.45.1' \
+            'app_file: streamlit_app.py' \
+            'pinned: false' \
+            '---' > hf_repo/README.md
+
+          # Eliminar Dockerfile si existe (usamos SDK nativo, no Docker)
+          rm -f hf_repo/Dockerfile
+
+          cd hf_repo
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Sin cambios."
+          else
+            git commit -m "chore: migrar a Streamlit SDK nativo $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
