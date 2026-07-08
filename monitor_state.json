@@ -1,6 +1,6 @@
 {
-  "en_alerta": false,
-  "ultima_alerta": "2026-07-07T09:07:42.149765",
-  "temp_min_evento": null,
+  "en_alerta": true,
+  "ultima_alerta": "2026-07-08T09:56:34.189288",
+  "temp_min_evento": 0.8,
   "ultimo_push_gh": "2026-07-07T09:07:42.149765"
 }
