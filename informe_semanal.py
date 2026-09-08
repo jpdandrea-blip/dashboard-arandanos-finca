@@ -6,6 +6,7 @@ Uso manual:  python informe_semanal.py
 Automatico:  llamado por el Programador de Tareas cada lunes.
 """
 
+import os
 import sqlite3
 import smtplib
 import sys
@@ -17,6 +18,14 @@ from pathlib import Path
 
 import json
 import pandas as pd
+
+# Cargar .env si existe (credenciales locales, no van a GitHub)
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        if _line.strip() and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 # ── Importar descarga de datos ────────────────────────────────────────────────
 sys.path.insert(0, str(Path(__file__).parent))
@@ -30,9 +39,13 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ── Configuracion email ───────────────────────────────────────────────────────
-EMAIL_ORIGEN  = "juanpidan99@gmail.com"
-EMAIL_DESTINO = "jpdandrea@tierradearandanos.com.ar"
-APP_PASSWORD  = "zzlatqgbfyjlsvij"   # sin espacios
+EMAIL_ORIGEN   = "juanpidan99@gmail.com"
+EMAIL_DESTINOS = [
+    "jpdandrea@tierradearandanos.com.ar",
+    "santiagofriasalurralde@tierradearandanos.com.ar",
+    "dsalinas@tierradearandanos.com.ar",
+]
+APP_PASSWORD  = os.environ.get("GMAIL_APP_PASSWORD", "")   # leer de .env local
 SMTP_HOST     = "smtp.gmail.com"
 SMTP_PORT     = 587
 
@@ -921,6 +934,45 @@ def construir_html(daily: pd.DataFrame, df_raw: pd.DataFrame, insights: list[dic
     return html
 
 
+# ── Sync a GitHub (para Streamlit Cloud) ─────────────────────────────────────
+import subprocess
+
+def sync_db_a_github(fecha: datetime) -> None:
+    """
+    Commitea la DB actualizada y la pushea a GitHub.
+    Streamlit Community Cloud detecta el push y redespliega el dashboard.
+    Requiere que el repo tenga un remote 'origin' configurado.
+    """
+    repo = Path(__file__).parent
+    try:
+        # Verificar que hay un remote configurado
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo, capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            log.warning("Git remote 'origin' no configurado. Omitiendo sync a GitHub.")
+            return
+
+        fecha_str = fecha.strftime("%Y-%m-%d")
+        subprocess.run(["git", "add", "pegasus_arandanos.db", "fenologia_config.json"],
+                       cwd=repo, check=True)
+        subprocess.run(["git", "commit", "-m",
+                        f"data: actualizar DB y fenologia {fecha_str} [auto]"],
+                       cwd=repo, capture_output=True)  # puede no haber cambios
+
+        # Sincronizar con remote antes de pushear (evita rejected si hay commits remotos)
+        subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "master"],
+                       cwd=repo, check=True, capture_output=True)
+        subprocess.run(["git", "push", "origin", "master"],
+                       cwd=repo, check=True, capture_output=True)
+        log.info("DB pusheada a GitHub. Streamlit Cloud redespliegara automaticamente.")
+    except subprocess.CalledProcessError as e:
+        log.warning(f"No se pudo pushear a GitHub: {e}")
+    except Exception as e:
+        log.warning(f"Error en sync_db_a_github: {e}")
+
+
 # ── Envio de email ────────────────────────────────────────────────────────────
 def enviar_email(html: str, fecha_hasta: datetime) -> None:
     semana_str = fecha_hasta.strftime("%d/%m/%Y")
@@ -929,18 +981,18 @@ def enviar_email(html: str, fecha_hasta: datetime) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = asunto
     msg["From"]    = f"Estacion Meteorologica <{EMAIL_ORIGEN}>"
-    msg["To"]      = EMAIL_DESTINO
+    msg["To"]      = ", ".join(EMAIL_DESTINOS)
 
     msg.attach(MIMEText(html, "html", "utf-8"))
 
-    log.info(f"Enviando email a {EMAIL_DESTINO}...")
+    log.info(f"Enviando email a {', '.join(EMAIL_DESTINOS)}...")
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.ehlo()
         server.starttls()
         server.login(EMAIL_ORIGEN, APP_PASSWORD)
-        server.sendmail(EMAIL_ORIGEN, EMAIL_DESTINO, msg.as_string())
+        server.sendmail(EMAIL_ORIGEN, EMAIL_DESTINOS, msg.as_string())
 
-    log.info("Email enviado correctamente.")
+    log.info(f"Email enviado a {len(EMAIL_DESTINOS)} destinatarios.")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -992,6 +1044,9 @@ def main():
 
     # 7. Enviar email
     enviar_email(html, fecha_hasta)
+
+    # 8. Pushear DB actualizada a GitHub (para Streamlit Community Cloud)
+    sync_db_a_github(ahora)
 
 
 if __name__ == "__main__":

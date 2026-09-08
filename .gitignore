@@ -1,9 +1,10 @@
 # Informes HTML generados automaticamente
 informe_*.html
 
-# Archivos de entorno
+# Credenciales locales - NUNCA subir a GitHub
 .env
 *.env
+config_privado.py
 
 # Datos de descarga local (no necesarios para el dashboard en la nube)
 # La DB SI se sube para que Streamlit Cloud la lea
